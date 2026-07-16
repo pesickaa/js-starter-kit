@@ -46,22 +46,25 @@ const render = async (user: KindeUser | null | undefined) => {
   }
 };
 
-const kinde = await createKindeClient({
-  client_id: import.meta.env.VITE_KINDE_CLIENT_ID,
-  domain: import.meta.env.VITE_KINDE_DOMAIN,
-  redirect_uri: import.meta.env.VITE_KINDE_REDIRECT_URL,
-});
-
 type KindeAction = "login" | "register" | "logout";
 
-const addKindeEvent = (id: KindeAction) => {
-  document.getElementById(id)?.addEventListener("click", async () => {
-    await kinde[id]();
+const init = async () => {
+  const kinde = await createKindeClient({
+    client_id: import.meta.env.VITE_KINDE_CLIENT_ID,
+    domain: import.meta.env.VITE_KINDE_DOMAIN,
+    redirect_uri: import.meta.env.VITE_KINDE_REDIRECT_URL,
   });
+
+  const addKindeEvent = (id: KindeAction) => {
+    document.getElementById(id)?.addEventListener("click", async () => {
+      await kinde[id]();
+    });
+  };
+
+  (["login", "register", "logout"] as const).forEach(addKindeEvent);
+
+  const user = await kinde.getUser();
+  await render(user);
 };
 
-(["login", "register", "logout"] as const).forEach(addKindeEvent);
-
-// Handle page load
-const user = await kinde.getUser();
-await render(user);
+init();
